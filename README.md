@@ -1,24 +1,38 @@
+Zap Ruder
+=========
+
 Zap Ruder is a Zapper test program.
 
-== Background ==
-
+Background
+----------
 On November 22, 1963, Abraham Zapruder used a Bell & Howell 8mm
 camera to shoot a 27-second silent short film of President John F.
 Kennedy's limousine and managed to catch his assassination by a
 sniper.  The developed film was used in the investigation of this
 heinous murder.
 
-The Zapper is a light gun for the NES.  Just as Zapruder's camera
-recorded light from the scene, the Zapper measures light from the TV.
+The Zapper is a light gun for the NES made by Nintendo, commonly used
+for the game *Duck Hunt*.  Just as Zapruder's camera recorded light
+from the scene, the Zapper works by measuring light from the TV.
 It contains a trigger switch and a photosensor that detects whether
-or not the barrel is aimed at a bright area on the screen.  
+or not the barrel is aimed at a bright area on the screen.
 
-Very few NES homebrew games use the Zapper, and I suspect that this
+The photosensor is connected to a resonator that distinguishes light
+from a CRT SDTV, which flickers at the 15.7 kHz scan rate, from any
+other light source.  As soon as it detects the appropriate rate, it
+activates a signal on the controller port.  Because this time is
+proportional to how far down the barrel is pointed, one can think of
+this signal as using [pulse-position modulation]. By using timed
+code, the NES CPU can count how long it takes between the start of a
+frame and when the photosensor begins to receive light and estimate
+the barrel's position that way.
+
+But very few NES homebrew games use the Zapper.  I suspect that this
 might have three causes:
 
  1. Proliferation of LCD HDTVs, as the Zapper's photosensor works
     only with the CRT SDTVs popular during the NES's commercial era.
- 2. Next to no published source code for how to make the most of
+ 2. Little published source code for how to make the most of
     the Zapper.
  3. Inaccurate emulation of the Zapper in popular emulators.
 
@@ -31,8 +45,10 @@ modded NES or a modded Vs. Duck Hunt.  It might even work on PAL
 famiclones such as Dendy for what it's worth.  But expect noticeable
 mistracking on a PAL NES due to a different CPU clock ratio.
 
-== The menu ==
+[pulse-position modulation]: https://en.wikipedia.org/wiki/Pulse-position_modulation
 
+The menu
+--------
 The menu demonstrates the common technique of flickering the targets
 to determine which target the player is pointing at.  When the
 photosensor is moved from a dark area to a light area, the menu
@@ -43,8 +59,8 @@ measures how far down the photosensor is using the "yonoff" kernel
 If this menu doesn't track well on your TV or your emulator, you
 can use the Control Pad of the controller in port 1 instead.
 
-== Technical tests ==
-
+Technical tests
+---------------
 All tests use a gun in port 2 and a standard controller in port 1
 unless otherwise specified.  All tracking tests use the "yonoff"
 kernel, which indicates how far down the screen the brightness
@@ -59,12 +75,12 @@ tint knob: 4 should be magenta (R=B, minimal G), and 10 should be
 green (G, minimal R=B).  Pulling the trigger twice rapidly will close
 each tracking test.
 
-=== Y tracking ===
+### Y tracking
 
 Most of the screen is filled with flat dither whose brightness and
 hue can be adjusted.
 
-=== Two-gun Y tracking ===
+### Two-gun Y tracking
 
 Kernel: yon2p (dual gun)
 
@@ -72,7 +88,7 @@ Most of the screen is filled with flat dither whose brightness and
 hue can be adjusted.  This test indicates the start of brightness for
 guns in both controller ports; the end of brightness is not measured.
 
-=== X tracking ===
+### X tracking
 
 Kernel: xyon
 
@@ -81,7 +97,11 @@ hue can be adjusted.  This test indicates both the horizontal and
 vertical position of the start of brightness, though the horizontal
 position is very noisy.
 
-=== Pattern tests ===
+The intent of this experimental kernel was to estimate the horizontal
+position in 18-pixel units, but noise caused the actual detection
+onset to vary by six units.  Thus this kernel isn't very useful.
+
+### Pattern tests
 
 Most of the screen is filled with vertical or horizontal line
 patterns whose brightness and hue can be adjusted, but brightness
@@ -93,14 +113,14 @@ can be set only to odd values (which correspond to flat colors).
 
 Color can be set to any hue and odd brightness; the rest is black.
 
-=== Ball tests ===
+### Ball tests
 
 In the center of the screen is a circle whose size, brightness, and
 hue can be adjusted, to show how small of a target the photosensor
 can reliably detect.  As with the vertical and horizontal line
 pattern tests, brightness can be set only to odd values.
 
-=== Trigger test ===
+### Trigger test
 
 The Zapper contains a mechanism to release the trigger switch once
 the trigger is pulled all the way, but one can keep the switch on by
@@ -108,9 +128,14 @@ holding the trigger halfway.  This is a simple test that counts
 how long the trigger switch on the gun in port 2 is held before it
 is released.  This is the only test that works on an HDTV.
 
-== Toys ==
+Because the Zapper pulls the trigger down harder than the Control
+Deck can pull it back up, the switch will usually appear active for
+at least 5 frames.
 
-=== Axe ===
+Toys
+----
+
+### Axe
 
 Point the gun at the screen to play notes.  Pitch is proportional
 to height on a pentatonic scale.  Create rhythm by covering and
@@ -120,9 +145,10 @@ change the timbre; press it quickly to accent a note.
 
 To exit, shoot offscreen twice.
 
-== Games ==
+Games
+-----
 
-=== ZapPing ===
+### ZapPing
 
 Kernel: yon2p (dual gun)
 
@@ -143,15 +169,15 @@ red.  These correspond to the two colors of Zapper that Nintendo
 has sold, both before and after a change to United States toy safety
 regulations.
 
-Move your paddle up and down with the Zapper or the standard
-controller.  Yes, a players with a Zapper will have an unfair
+Move your paddle up and down with the Zapper or by pressing Up or
+Down on the Control Pad.  A players with a Zapper will have an unfair
 advantage over a player with a controller, just as first-person
 shooter players with a mouse have an advantage over players with an
 Xbox 360 controller.  Just remember not to point your Zapper off the
 big green table because it will stop tracking until you point it at
-the table again.  (Arkanoid Vaus and Power Glove controllers are not
-supported yet due to lack of hardware with which to test; donations
-are welcome.)
+the table again.  (Arkanoid controllers are not yet supported due to
+lack of time, and Power Glove controllers are not supported yet due
+to lack of hardware with which to test.  Donations are welcome.)
 
 Each player serves the ball with the A button or the trigger for
 two balls before passing.  The game speeds up gradually.  When you
@@ -162,16 +188,17 @@ at least 11 points and ahead by two, except at 20-20, 21 always wins.
 To exit, press B on controller 1 at the title screen, or press Reset
 if two guns are connected.
 
-== Contact me ==
+Contact
+-------
+Apart from filing an issue, the most reliable ways to contact the
+maintainer about Zap Ruder are by replying to a [topic on NESdev BBS]
+or by leaving comments on the project's [talk page].
 
-Members of the NESdev BBS can discuss this demo in this topic:
-<http://nesdev.parodius.com/bbs/viewtopic.php?t=8108>
+[topic on NESdev BBS]: https://forums.nesdev.com/viewtopic.php?t=8108
+[talk page]: https://pineight.com/mw/?title=Talk:Zap_Ruder
 
-Others can leave comments on the project's talk page:
-<http://pineight.com/mw/?title=Talk:Zap_Ruder>
-
-== Legal ==
-
+Legal
+-----
 Copyright 2012 Damian Yerrick
 
 Copying and distribution of this file, with or without
