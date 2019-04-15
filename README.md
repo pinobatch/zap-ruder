@@ -18,14 +18,14 @@ It contains a trigger switch and a photosensor that detects whether
 or not the barrel is aimed at a bright area on the screen.
 
 The photosensor is connected to a resonator that distinguishes light
-from a CRT SDTV, which flickers at the 15.7 kHz scan rate, from any
-other light source.  As soon as it detects the appropriate rate, it
-activates a signal on the controller port.  Because this time is
-proportional to how far down the barrel is pointed, one can think of
-this signal as using [pulse-position modulation]. By using timed
-code, the NES CPU can count how long it takes between the start of a
-frame and when the photosensor begins to receive light and estimate
-the barrel's position that way.
+from a CRT SDTV, which flickers at the 15.7 kHz horizontal scan rate,
+from any other light source.  As soon as it detects the appropriate
+rate, it activates a signal on the controller port.  Because this
+time is proportional to how far down the barrel is pointed, one can
+think of this signal as using [pulse-position modulation].  By using
+timed code, the NES CPU can count how long it takes between the start
+of a frame and when the photosensor begins to receive light and
+estimate the barrel's position that way.
 
 But very few NES homebrew games use the Zapper.  I suspect that this
 might have three causes:
@@ -41,9 +41,10 @@ as a tech demo of reading the trigger only.  Zap Ruder aims
 to solve cause 2 and provide test cases for solving cause 3.
 
 This demo is for NTSC NES and NTSC TV.  It should also run on RGB
-modded NES or a modded Vs. Duck Hunt.  It might even work on PAL
-famiclones such as Dendy for what it's worth.  But expect noticeable
-mistracking on a PAL NES due to a different CPU clock ratio.
+modded NES.  It might even work on PAL famiclones such as Dendy for
+what it's worth.  But expect noticeable mistracking on a PAL NES due
+to a different CPU clock ratio.  The serial gun of *Vs. Duck Hunt*
+is not yet supported.
 
 [pulse-position modulation]: https://en.wikipedia.org/wiki/Pulse-position_modulation
 
@@ -157,8 +158,8 @@ first popular video game.  You may have played Odyssey, which was
 Pong before Pong was cool.  You may have even played FlapPing for
 Atari 2600.  But it is the 2010s, and there is time for ZapPing.
 It manages to coax a control feel nearly as smooth as a Wii Remote
-from 1985 technology.  But the basic rule of air hockey still lies
-unchanged: avoid missing ball for high score.
+from 1985 technology.  But the basic rule of air hockey remains:
+avoid missing ball for high score.
 
 At the title screen, press A or pull the trigger to join.  Press the
 button again to play against the NES, or press the button on the
@@ -173,11 +174,12 @@ Move your paddle up and down with the Zapper or by pressing Up or
 Down on the Control Pad.  A players with a Zapper will have an unfair
 advantage over a player with a controller, just as first-person
 shooter players with a mouse have an advantage over players with an
-Xbox 360 controller.  Just remember not to point your Zapper off the
+Xbox controller.  Just remember not to point your Zapper off the
 big green table because it will stop tracking until you point it at
-the table again.  (Arkanoid controllers are not yet supported due to
-lack of time, and Power Glove controllers are not supported yet due
-to lack of hardware with which to test.  Donations are welcome.)
+the table again.  (The Arkanoid controller and Super NES Mouse are
+not yet supported due to lack of time, and Power Glove controllers
+are not supported yet due to lack of hardware with which to test.
+Donations are welcome.)
 
 Each player serves the ball with the A button or the trigger for
 two balls before passing.  The game speeds up gradually.  When you
@@ -199,7 +201,7 @@ or by leaving comments on the project's [talk page].
 
 Legal
 -----
-Copyright 2012 Damian Yerrick
+Copyright 2012, 2019 Damian Yerrick
 
 Copying and distribution of this file, with or without
 modification, are permitted in any medium without royalty provided

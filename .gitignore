@@ -9,6 +9,9 @@
 /nsfmap.txt
 __pycache__/
 *.pyc
+/ruder.nes
+/ruder.nsf
+/ruder-*.zip
 
 # this is NES homebrew, not DSiWare
 *.DS_Store

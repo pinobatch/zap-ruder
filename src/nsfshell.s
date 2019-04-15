@@ -11,7 +11,7 @@
 NUM_SONGS = 4
 
 .import pently_start_music, pently_init, pently_update
-.exportzp psg_sfx_state
+.exportzp pently_zp_state
 .export music_row_callback, music_dalsegno_callback
 
 .segment "NSFHDR"
@@ -35,7 +35,7 @@ names_start:
   .byt $00  ; Famicom mapper sound not used
 
 .segment "ZEROPAGE"
-psg_sfx_state: .res 32
+pently_zp_state: .res 32
 tvSystem: .res 1
 
 .segment "CODE"

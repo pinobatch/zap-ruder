@@ -1,3 +1,8 @@
+0.03a (2019-04-15)
+* Rebuild with Python 3 and recent ca65
+* Move audio subroutine names into Pently namespace
+* Move binaries from repository to release
+
 0.03 (2012-05-14)
 * Axe: a music toy
 * music engine supports playing notes and performing a call back

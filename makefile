@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 #
 # Makefile for Zapper tech demo for NES
-# Copyright 2011 Damian Yerrick
+# Copyright 2011-2019 Damian Yerrick
 #
 # Copying and distribution of this file, with or without
 # modification, are permitted in any medium without royalty
@@ -21,7 +21,7 @@ objlist := zapkernels main ppuclear title menu testpatterns \
            pentlysound pentlymusic musicseq ntscPeriods \
            bcd math pads unpkb
 
-objlistnsf := nsfshell sound music musicseq ntscPeriods
+objlistnsf := nsfshell pentlysound pentlymusic musicseq ntscPeriods
 
 AS65 = ca65
 LD65 = ld65
@@ -60,29 +60,30 @@ DOTEXE:=
 PY:=python3
 endif
 
-.PHONY: run dist zip
+.PHONY: run debug all dist zip clean
 
 run: $(title).nes
 	$(EMU) $<
 
-# Rule to create or update the distribution zipfile by adding all
-# files listed in zip.in.  Actually the zipfile depends on every
-# single file in zip.in, but currently we use changes to the compiled
-# program, makefile, and README as a heuristic for when something was
-# changed.  It won't see changes to docs or tools, but usually when
-# docs changes, README also changes, and when tools changes, the
-# makefile changes.
+# packaging
+
+# Actually this depends on every file in zip.in, but currently we use
+# changes to the ROM, makefile, and README as a heuristic for when
+# something was changed.  Limitation: it won't see changes to docs or
+# tools unless there is a corresponding makefile change.
+all: $(title).nes $(title).nsf
 dist: zip
 zip: $(title)-$(version).zip
 $(title)-$(version).zip: zip.in $(title).nes $(title).nsf \
-  README.txt $(objdir)/index.txt
+  README.md CHANGES.txt $(objdir)/index.txt
 	zip -9 -u $@ -@ < $<
 
 # Build zip.in from the list of files in the Git tree
 zip.in:
 	git ls-files | grep -e "^[^.]" > $@
 	echo zip.in >> $@
-	echo $(TITLE).nes >> $@
+	echo $(title).nes >> $@
+	echo $(title).nsf >> $@
 
 $(objdir)/index.txt: makefile
 	echo Files produced by build tools go here, but caulk goes where? > $@
