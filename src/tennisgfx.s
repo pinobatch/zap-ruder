@@ -76,7 +76,7 @@ loop:
   sec
   jsr ppu_screen_on
   jsr read_pads
-  jsr update_sound
+  jsr pently_update
   
   ldx #1
 handle_join:

@@ -91,6 +91,6 @@ abl_keys = 6  ; bit 0: increase; bit 1: decrease
 .global axe
 
 ; Pently sound methods
-.global init_sound, update_sound, start_sound
+.global pently_init, pently_update, pently_start_sound
 ; Pently music methods
-.global init_music, stop_music, music_play_note
+.global pently_start_music, pently_stop_music, pently_play_note

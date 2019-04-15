@@ -21,7 +21,7 @@
 ;  4 Hi-hat lo (ball bounces off paddle)
 ;  5 Snare drum (noise part)
 ;  6 Kick drum (noise part)
-psg_sound_table:
+pently_sfx_table:
   .addr mirv_split_snd
   .byt 0, 18
   .addr snare2_snd
@@ -97,7 +97,7 @@ instrumentTable:
   .byt $02, 2, $00, 0  ; axe #3 echo
   .byt $82, 5, $00, 0  ; axe echo-128
 
-songTable:
+pently_songs:
   .addr title_conductor
   .addr win_point_conductor
   .addr win_game_conductor

@@ -99,7 +99,7 @@ gameloop:
   and #$08
   sta using_gun+1
   jsr read_pads
-  jsr update_sound
+  jsr pently_update
 
   ; moving paddles must happen after the screen turns on
   ; because the positions are read from the screen
@@ -388,7 +388,7 @@ no_flip_x:
   ; The ball velocity is final.
   jsr tennis_update_ball_ypred
   lda #4
-  jmp start_sound
+  jmp pently_start_sound
 .endproc
 
 ;;
@@ -489,7 +489,7 @@ reflect_yvel:
 
   jsr tennis_update_ball_ypred
   lda #3
-  jsr start_sound
+  jsr pently_start_sound
 not_bounce_off_wall:
 
   ;fall through: jmp tennis_check_collision
@@ -732,7 +732,7 @@ is_win:
   lda #150
   sta state_timer
   lda #2
-  jsr init_music
+  jsr pently_start_music
   lda #STATE_WIN_GAME
   sta game_state
   jmp tennis_draw_score_digits
@@ -745,7 +745,7 @@ tip_drawn:
   lda #150
   sta state_timer
   lda #1
-  jsr init_music
+  jsr pently_start_music
   lda #STATE_WIN_POINT
   sta game_state
   jmp tennis_draw_score_digits

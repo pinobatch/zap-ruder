@@ -5,8 +5,8 @@
 ; the copyright notice and this notice are preserved in all source
 ; code copies.  This file is offered as-is, without any warranty.
 
-.global drumSFX, psg_sound_table
-.global musicPatternTable, instrumentTable, songTable
+.global drumSFX, pently_sfx_table
+.global musicPatternTable, instrumentTable, pently_songs
 
 N_C  =  0*8
 N_CS =  1*8

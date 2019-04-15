@@ -61,7 +61,7 @@ oamload:
   jsr PKB_unpackblk
 
   lda #0
-  jsr init_music
+  jsr pently_start_music
 loop:
   lda nmis
 :
@@ -79,7 +79,7 @@ loop:
   lda #BG_ON|OBJ_ON
   sta PPUMASK
 
-  jsr update_sound
+  jsr pently_update
   jsr read_pads
   
   lda new_keys+0
@@ -87,7 +87,7 @@ loop:
   and #KEY_A|KEY_START
   beq loop
 
-  jsr init_sound  ; always call this before stopping update_sound
+  jsr pently_init  ; always call this before stopping pently_update
   rts
 .endproc
 

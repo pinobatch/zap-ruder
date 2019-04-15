@@ -25,8 +25,8 @@ objlistnsf := nsfshell sound music musicseq ntscPeriods
 
 AS65 = ca65
 LD65 = ld65
-CFLAGS65 := -DZAPPER_TO_A_BUTTON=1 -DSOUND_NTSC_ONLY=1 \
-  -DMUSIC_USE_ROW_CALLBACK=1
+CFLAGS65 := -DZAPPER_TO_A_BUTTON=1 -DPENTLY_USE_PAL_ADJUST=0 \
+  -DPENTLY_USE_ROW_CALLBACK=1
 objdir = obj/nes
 srcdir = src
 imgdir = tilesets
@@ -82,6 +82,7 @@ $(title)-$(version).zip: zip.in $(title).nes $(title).nsf \
 zip.in:
 	git ls-files | grep -e "^[^.]" > $@
 	echo zip.in >> $@
+	echo $(TITLE).nes >> $@
 
 $(objdir)/index.txt: makefile
 	echo Files produced by build tools go here, but caulk goes where? > $@
@@ -127,5 +128,3 @@ $(objdir)/%.chr: $(imgdir)/%.png
 
 $(objdir)/%16.chr: $(imgdir)/%.png
 	$(PY) tools/pilbmp2nes.py -H 16 $< $@
-
-

@@ -10,7 +10,7 @@
 
 NUM_SONGS = 4
 
-.import init_music, init_sound, update_sound
+.import pently_start_music, pently_init, pently_update
 .exportzp psg_sfx_state
 .export music_row_callback, music_dalsegno_callback
 
@@ -20,7 +20,7 @@ NUM_SONGS = 4
   .byt 1  ; first song to play
   .addr $C000  ; load address (should match link script)
   .addr init_sound_and_music
-  .addr update_sound
+  .addr pently_update
 names_start:
   .byt "Zap Ruder"
   .res names_start+32-*, $00
@@ -42,9 +42,9 @@ tvSystem: .res 1
 .proc init_sound_and_music
   stx tvSystem
   pha
-  jsr init_sound
+  jsr pently_init
   pla
-  jmp init_music
+  jmp pently_start_music
 .endproc
 
 music_row_callback:

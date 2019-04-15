@@ -93,7 +93,7 @@ clear_notes:
   dex
   bpl clear_notes
   lda #3
-  jsr init_music
+  jsr pently_start_music
   lda #$FF
   sta new_dot_dsthi
   sta scroll_dsthi
@@ -185,7 +185,7 @@ noHardAccent:
 doneA:
   sta held_time
   
-  jsr update_sound
+  jsr pently_update
 
   ; read the zapper
   jsr s0wait
@@ -237,7 +237,7 @@ not_triggered:
   bne done
   jmp loop
 done:
-  jsr init_sound
+  jsr pently_init
   lda #0
   sta axe_callback_on
   rts
@@ -274,7 +274,7 @@ done:
   clc
   adc #12
   ldx #8
-  jsr music_play_note
+  jsr pently_play_note
   
 no_minus128:
   
@@ -309,7 +309,7 @@ no_minus128:
   tay
   lda pentatonic_notes,x
   ldx #4  ; square 2
-  jsr music_play_note
+  jsr pently_play_note
 
   dec noteAccent
   bpl no_clip_accent
@@ -342,7 +342,7 @@ echo_minusthree:
   tay
   lda pentatonic_notes,x
   ldx #4
-  jsr music_play_note
+  jsr pently_play_note
   
 no_minusthree:
 

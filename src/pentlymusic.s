@@ -10,47 +10,47 @@
 
 ; For summary of changes see sound.s
 
-.importzp psg_sfx_state
-.import soundBSS
-.import start_sound
-.export music_playing
-.export init_music, stop_music, update_music, update_music_ch
-.export music_play_note
+.importzp pently_zp_state
+.import pentlyBSS
+.import pently_start_sound
+.export pently_music_playing
+.export pently_start_music, pently_stop_music, update_music, update_music_ch
+.export pently_play_note
 .include "pentlyseq.inc"
 
-.ifndef SOUND_NTSC_ONLY
-SOUND_NTSC_ONLY = 0
+.ifndef PENTLY_USE_PAL_ADJUST
+PENTLY_USE_PAL_ADJUST = 1
 .endif
-.if (!SOUND_NTSC_ONLY)
+.if PENTLY_USE_PAL_ADJUST
 .importzp tvSystem
 .endif
 
-.ifndef MUSIC_USE_ROW_CALLBACK
-MUSIC_USE_ROW_CALLBACK = 0
+.ifndef PENTLY_USE_ROW_CALLBACK
+PENTLY_USE_ROW_CALLBACK = 0
 .endif
-.if MUSIC_USE_ROW_CALLBACK
+.if PENTLY_USE_ROW_CALLBACK
 .import music_row_callback, music_dalsegno_callback
 .endif
 
 
-musicPatternPos = psg_sfx_state + 2
-conductorPos = psg_sfx_state + 16
-noteEnvVol = soundBSS + 0
-notePitch = soundBSS + 1
-noteRowsLeft = soundBSS + 2
+musicPatternPos = pently_zp_state + 2
+conductorPos = pently_zp_state + 16
+noteEnvVol = pentlyBSS + 0
+notePitch = pentlyBSS + 1
+noteRowsLeft = pentlyBSS + 2
 ; 3 is in sound.s
-musicPattern = soundBSS + 16
-patternTranspose = soundBSS + 17
-noteInstrument = soundBSS + 18
+musicPattern = pentlyBSS + 16
+patternTranspose = pentlyBSS + 17
+noteInstrument = pentlyBSS + 18
 ; 19 is in sound.s
-tempoCounterLo = soundBSS + 48
-tempoCounterHi = soundBSS + 49
-music_tempoLo = soundBSS + 50
-music_tempoHi = soundBSS + 51
-conductorSegno = soundBSS + 52
+tempoCounterLo = pentlyBSS + 48
+tempoCounterHi = pentlyBSS + 49
+music_tempoLo = pentlyBSS + 50
+music_tempoHi = pentlyBSS + 51
+conductorSegno = pentlyBSS + 52
 
-conductorWaitRows = soundBSS + 62
-music_playing = soundBSS + 63
+conductorWaitRows = pentlyBSS + 62
+pently_music_playing = pentlyBSS + 63
 
 FRAMES_PER_MINUTE_PAL = 3000
 FRAMES_PER_MINUTE_NTSC = 3606
@@ -70,17 +70,17 @@ durations:
   .byt 1, 2, 3, 4, 6, 8, 12, 16
 
 .segment "CODE"
-.proc init_music
+.proc pently_start_music
   asl a
   tax
-  lda songTable,x
+  lda pently_songs,x
   sta conductorPos
   sta conductorSegno
-  lda songTable+1,x
+  lda pently_songs+1,x
   sta conductorPos+1
   sta conductorSegno+1
   ldx #12
-  stx music_playing
+  stx pently_music_playing
   channelLoop:
     lda #$FF
     sta musicPattern,x
@@ -110,14 +110,14 @@ durations:
   rts
 .endproc
 
-.proc stop_music
+.proc pently_stop_music
   lda #0
-  sta music_playing
+  sta pently_music_playing
   rts
 .endproc
 
 .proc update_music
-  lda music_playing
+  lda pently_music_playing
   beq music_not_playing
   lda music_tempoLo
   clc
@@ -131,13 +131,13 @@ music_not_playing:
   rts
 new_tick:
 
-.if ::SOUND_NTSC_ONLY
-  ldy #0
-.else
+.if ::PENTLY_USE_PAL_ADJUST
   ldy tvSystem
   beq is_ntsc_1
-  ldy #1
-is_ntsc_1:
+    ldy #1
+  is_ntsc_1:
+.else
+  ldy #0
 .endif
 
   ; Subtract tempo
@@ -148,7 +148,7 @@ is_ntsc_1:
   sbc fpmHi,y
   sta tempoCounterHi
 
-.if ::MUSIC_USE_ROW_CALLBACK
+.if ::PENTLY_USE_ROW_CALLBACK
   jsr music_row_callback
 .endif
 
@@ -186,10 +186,10 @@ doConductor:
   cmp #CON_FINE
   bne @notFine
     lda #0
-    sta music_playing
+    sta pently_music_playing
     sta music_tempoHi
     sta music_tempoLo
-.if ::MUSIC_USE_ROW_CALLBACK
+.if ::PENTLY_USE_ROW_CALLBACK
     clc
     jmp music_dalsegno_callback
 .else
@@ -212,7 +212,7 @@ doConductor:
     sta conductorPos
     lda conductorSegno+1
     sta conductorPos+1
-.if ::MUSIC_USE_ROW_CALLBACK
+.if ::PENTLY_USE_ROW_CALLBACK
     sec
     jsr music_dalsegno_callback
 .endif
@@ -309,7 +309,7 @@ skipConductor:
       beq isDrumNote
       adc patternTranspose,x
       ldy noteInstrument,x
-      jsr music_play_note
+      jsr pently_play_note
     
     skipNote:
     dec noteRowsLeft,x
@@ -327,12 +327,12 @@ isDrumNote:
   pha
   tax
   lda drumSFX,x
-  jsr start_sound
+  jsr pently_start_sound
   pla
   tax
   lda drumSFX+1,x
   bmi noSecondDrum
-  jsr start_sound
+  jsr pently_start_sound
 noSecondDrum:
   ldx 5
   jmp skipNote
@@ -357,7 +357,7 @@ startPattern:
 
 ;;
 ; Plays note A on channel X (0, 4, 8, 12) with instrument Y.
-.proc music_play_note
+.proc pently_play_note
   sta notePitch,x
   tya
   sta noteInstrument,x
@@ -379,7 +379,7 @@ startPattern:
   out_volume = 2
   out_pitch = 3
 
-  lda music_playing
+  lda pently_music_playing
   beq silenced
   lda noteEnvVol,x
   lsr a

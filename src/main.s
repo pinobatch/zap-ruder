@@ -12,7 +12,7 @@
 .include "global.inc"
 
 .import axe_callback_on
-.export psg_sfx_state
+.export pently_zp_state
 
 .segment "ZEROPAGE"
 nmis:          .res 1
@@ -30,7 +30,7 @@ player_frame:     .res 1
 player_frame_sub: .res 1
 
 ; Used by music engine
-psg_sfx_state: .res 32
+pently_zp_state: .res 32
 
 
 .segment "INESHDR"
@@ -81,7 +81,7 @@ mineshaft_zapruder_nmi_switch = $07DF
   stx mineshaft_zapruder_nmi_switch
   inx
   stx axe_callback_on
-  jsr init_sound
+  jsr pently_init
   jsr tennis
   jmp ($FFFC)
 .endproc
@@ -93,7 +93,7 @@ mineshaft_zapruder_nmi_switch = $07DF
   stx mineshaft_zapruder_nmi_switch
   inx
   stx axe_callback_on
-  jsr init_sound
+  jsr pently_init
   jsr axe
   jmp ($FFFC)
 .endproc
@@ -119,7 +119,7 @@ palloop:
   cpx #32
   bcc palloop
 
-  jsr init_sound
+  jsr pently_init
   jsr test_fullbright_yonoff
   jmp ($FFFC)
 .endproc
@@ -161,7 +161,7 @@ clear_zp:
   sta $00,x
   inx
   bne clear_zp
-  jsr init_sound
+  jsr pently_init
 
 vwait2:
   bit PPUSTATUS  ; After the second vblank, we know the PPU has

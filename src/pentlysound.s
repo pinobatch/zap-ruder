@@ -10,30 +10,32 @@
 
 ; Summary of changes:
 ;
-; Zap Ruder (late 2011)
+; Pently 3.1 (Zap Ruder, late 2011)
 ;   Now with an NSF shell
-;   Fixed problem with disabling certain channels in init_sound
+;   Fixed problem with disabling certain channels in pently_init
 ;   Relicensed permissively
 ;   Option to call a callback function for each row
 ;   Exposed subroutine to play a note on a channel
-; Thwaite (early 2011)
+; Pently 3 (Thwaite, early 2011)
 ;   Moved sound effects to musicseq.s
 ;   A single drum note can start two sound effects
 ;   A music note can override the quiet tail of a sound effect
 ;   Phrase data can include instrument changes
 ;   NTSC/PAL automatic adaptation
 ;   Added macro definitions for conductor events
-; Concentration Room (2010)
+; Pently 2.1 (Concentration Room, 2010)
 ;   Fixed bug with interrupting a note with a playPattern command,
 ;   occurring especially with non-multiple-of-16 waitRows
 ;   Added macro definitions for note pitches and durations
-; LJ65 (2009)
+; Pently 2 (LJ65, 2009)
+;   add music
+; Pently 1 (LJ65, 2009)
 ;   initial release
 
 .import periodTableLo, periodTableHi
-.importzp psg_sfx_state  ; a 32 byte buffer in zp?
-.import update_music, update_music_ch, music_playing, psg_sound_table
-.export init_sound, start_sound, update_sound, soundBSS
+.importzp pently_zp_state  ; a 32 byte buffer in zp?
+.import update_music, update_music_ch, pently_music_playing, pently_sfx_table
+.export pently_init, pently_start_sound, pently_update, pentlyBSS
 
 SNDCHN = $4015
 
@@ -51,19 +53,19 @@ SQUARE_POOLING = 1
 KEEP_MUSIC_IF_LOUDER = 1
 
 .segment "BSS"
-soundBSS: .res 64
+pentlyBSS: .res 64
 
-psg_sfx_datalo = psg_sfx_state + 0
-psg_sfx_datahi = psg_sfx_state + 1
-psg_sfx_lastfreqhi = psg_sfx_state + 18
-psg_sfx_remainlen = psg_sfx_state + 19
-psg_sfx_rate = soundBSS + 3
-psg_sfx_ratecd = soundBSS + 19
+sfx_datalo = pently_zp_state + 0
+sfx_datahi = pently_zp_state + 1
+ch_lastfreqhi = pently_zp_state + 18
+sfx_remainlen = pently_zp_state + 19
+sfx_rate = pentlyBSS + 3
+sfx_ratecd = pentlyBSS + 19
 
-.ifndef SOUND_NTSC_ONLY
-SOUND_NTSC_ONLY = 0
+.ifndef PENTLY_USE_PAL_ADJUST
+PENTLY_USE_PAL_ADJUST = 1
 .endif
-.if (!SOUND_NTSC_ONLY)
+.if PENTLY_USE_PAL_ADJUST
 .importzp tvSystem
 .endif
 
@@ -72,18 +74,18 @@ SOUND_NTSC_ONLY = 0
 ;;
 ; Initializes all sound channels.
 ; Use it at the start of a program or as a "panic button" before
-; entering a long stretch of code where you don't update_sound.
+; entering a long stretch of code where you don't pently_update.
 ;
-.proc init_sound
+.proc pently_init
   lda #$0F
   sta SNDCHN
   lda #$30
   sta $4000
   sta $4004
   sta $400C
-  sta psg_sfx_lastfreqhi+0
-  sta psg_sfx_lastfreqhi+8
-  sta psg_sfx_lastfreqhi+4
+  sta ch_lastfreqhi+0
+  sta ch_lastfreqhi+8
+  sta ch_lastfreqhi+4
   lda #$80
   sta $4008
   lda #8
@@ -93,11 +95,11 @@ SOUND_NTSC_ONLY = 0
   sta $4003
   sta $4007
   sta $400F
-  sta psg_sfx_remainlen+0
-  sta psg_sfx_remainlen+4
-  sta psg_sfx_remainlen+8
-  sta psg_sfx_remainlen+12
-  sta music_playing
+  sta sfx_remainlen+0
+  sta sfx_remainlen+4
+  sta sfx_remainlen+8
+  sta sfx_remainlen+12
+  sta pently_music_playing
   lda #64
   sta $4011
   rts
@@ -109,7 +111,7 @@ SOUND_NTSC_ONLY = 0
 ;
 ; @param A sound effect number (0-63)
 ;
-.proc start_sound
+.proc pently_start_sound
 snddatalo = 0
 snddatahi = 1
 sndchno = 2
@@ -119,29 +121,29 @@ sndrate = 4
   asl a
   asl a
   tax
-  lda psg_sound_table,x
+  lda pently_sfx_table,x
   sta snddatalo
-  lda psg_sound_table+1,x
+  lda pently_sfx_table+1,x
   sta snddatahi
-  lda psg_sound_table+2,x
+  lda pently_sfx_table+2,x
   and #$0C
   sta sndchno
-  lda psg_sound_table+2,x
+  lda pently_sfx_table+2,x
   lsr a
   lsr a
   lsr a
   lsr a
   sta sndrate
   
-  lda psg_sound_table+3,x
+  lda pently_sfx_table+3,x
   sta sndlen
 
   ; split up square wave sounds between $4000 and $4004
   .if ::SQUARE_POOLING
     lda sndchno
     bne not_ch0to4  ; if not ch 0, don't try moving it
-      lda psg_sfx_remainlen+4
-      cmp psg_sfx_remainlen
+      lda sfx_remainlen+4
+      cmp sfx_remainlen
       bcs not_ch0to4
       lda #4
       sta sndchno
@@ -150,21 +152,21 @@ sndrate = 4
 
   ldx sndchno
   lda sndlen
-  cmp psg_sfx_remainlen,x
+  cmp sfx_remainlen,x
   bcs ch_not_full
   rts
 ch_not_full:
 
   lda snddatalo
-  sta psg_sfx_datalo,x
+  sta sfx_datalo,x
   lda snddatahi
-  sta psg_sfx_datahi,x
+  sta sfx_datahi,x
   lda sndlen
-  sta psg_sfx_remainlen,x
+  sta sfx_remainlen,x
   lda sndrate
-  sta psg_sfx_rate,x
+  sta sfx_rate,x
   lda #0
-  sta psg_sfx_ratecd,x
+  sta sfx_ratecd,x
   rts
 .endproc
 
@@ -172,7 +174,7 @@ ch_not_full:
 ;;
 ; Updates sound effect channels.
 ;
-.proc update_sound
+.proc pently_update
   jsr update_music
   ldx #12
 loop:
@@ -190,7 +192,7 @@ loop:
 
   ; At this point, the music engine should have left duty and volume
   ; in 2 and pitch in 3.
-  lda psg_sfx_remainlen,x
+  lda sfx_remainlen,x
   bne ch_not_done
   lda 2
   bne update_channel_hw
@@ -202,26 +204,26 @@ loop:
   not_triangle_kill:
   sta $4000,x
   lda #$FF
-  sta psg_sfx_lastfreqhi,x
+  sta ch_lastfreqhi,x
   rts
 ch_not_done:
 
   ; playback rate divider
-  dec psg_sfx_ratecd,x
+  dec sfx_ratecd,x
   bpl rate_divider_cancel
-  lda psg_sfx_rate,x
-  sta psg_sfx_ratecd,x
+  lda sfx_rate,x
+  sta sfx_ratecd,x
 
   ; fetch the instruction
-  lda psg_sfx_datalo+1,x
+  lda sfx_datalo+1,x
   sta 1
-  lda psg_sfx_datalo,x
+  lda sfx_datalo,x
   sta 0
   clc
   adc #2
-  sta psg_sfx_datalo,x
+  sta sfx_datalo,x
   bcc :+
-  inc psg_sfx_datahi,x
+  inc sfx_datahi,x
 :
   ldy #0
   .if ::KEEP_MUSIC_IF_LOUDER
@@ -241,7 +243,7 @@ ch_not_done:
   lda (0),y
   sta 3
 music_was_louder:
-  dec psg_sfx_remainlen,x
+  dec sfx_remainlen,x
 
 update_channel_hw:
   lda 2
@@ -257,21 +259,19 @@ rate_divider_cancel:
 notnoise:
   sta $4000,x
   ldy 3
-.ifndef ::SOUND_NTSC_ONLY
+.if ::PENTLY_USE_PAL_ADJUST
   lda tvSystem
   beq :+
-  iny
-:
+    iny
+  :
 .endif
   lda periodTableLo,y
   sta $4002,x
   lda periodTableHi,y
-  cmp psg_sfx_lastfreqhi,x
+  cmp ch_lastfreqhi,x
   beq no_change_to_hi_period
-  sta psg_sfx_lastfreqhi,x
+  sta ch_lastfreqhi,x
   sta $4003,x
 no_change_to_hi_period:
-
   rts
 .endproc
-
