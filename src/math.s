@@ -26,7 +26,7 @@
 ; http://en.wikipedia.org/wiki/Binary_scaling#Binary_angles
 ;
 
-.include "src/tennis.h"
+.include "tennis.inc"
 .segment "CODE"
 
 ;;
@@ -104,16 +104,3 @@ sine256Q1:
   .byt 0, 50, 98, 142, 181, 213, 237, 251
 cosine256Q1:
   .byt  0, 251, 237, 213, 181, 142, 98, 50
-
-; Less precise sin/cos table used by e.g. missile smoke generation.
-; These are indexed by angle through the whole circle
-; and scaled by 64.
-; (90*7/8)s*64=
-missileSine:
-  .byt   0, 12, 24, 36, 45, 53, 59, 63
-missileCosine:
-  .byt  64, 63, 59, 53, 45, 36, 24, 12
-  .byt   0,-12,-24,-36,-45,-53,-59,-63
-  .byt -64,-63,-59,-53,-45,-36,-24,-12
-  .byt   0, 12, 24, 36, 45, 53, 59, 63
-

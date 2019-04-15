@@ -7,7 +7,7 @@
 ; the copyright notice and this notice are preserved in all source
 ; code copies.  This file is offered as-is, without any warranty.
 ;
-.include "src/tennis.h"
+.include "tennis.inc"
 .import ppu_staxp32ym1
 
 JOIN_DELAY = 300
@@ -338,7 +338,7 @@ score1_is_zero:
 score2_is_zero:
   sta digitsBuffer+2
   lda whatNeedsDrawn
-  and #~DRAW_SCORE
+  and #<~DRAW_SCORE
   sta whatNeedsDrawn
   lda whatToBlit
   ora #DRAW_SCORE
@@ -364,7 +364,7 @@ iszero:
   dex
   bpl loop
   lda whatToBlit
-  and #~DRAW_SCORE
+  and #<~DRAW_SCORE
   sta whatToBlit
   rts
 
@@ -391,12 +391,12 @@ digitlocs:
 
 .proc tennis_init_tip
   ldy #4*TIP_WIDTH-1
-:
-  sta tipBuffer,y
-  dey
-  bpl :-
+  :
+    sta tipBuffer,y
+    dey
+    bpl :-
   lda whatNeedsDrawn
-  and #~DRAW_TIP
+  and #<~DRAW_TIP
   sta whatNeedsDrawn
   lda whatToBlit
   ora #DRAW_TIP
@@ -534,7 +534,7 @@ lineloop:
   cpx #TIP_WIDTH*4
   bcc lineloop
   lda whatToBlit
-  and #~DRAW_TIP
+  and #<~DRAW_TIP
   sta whatToBlit
   rts
 .endproc

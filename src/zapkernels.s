@@ -7,7 +7,7 @@
 ; the copyright notice and this notice are preserved in all source
 ; code copies.  This file is offered as-is, without any warranty.
 ;
-.include "src/nes.h"
+.include "nes.inc"
 
 ; $4017.D4: Trigger switch (1: pressed)
 ; $4017.D3: Light detector (0: bright)

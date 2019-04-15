@@ -7,8 +7,8 @@
 ; the copyright notice and this notice are preserved in all source
 ; code copies.  This file is offered as-is, without any warranty.
 ;
-.include "src/nes.h"
-.include "src/ram.h"
+.include "nes.inc"
+.include "global.inc"
 .export ppu_clear_nt, ppu_sta32y, ppu_staxp32ym1, ppu_clear_oam, ppu_screen_on
 
 ;;

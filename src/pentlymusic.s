@@ -16,7 +16,7 @@
 .export music_playing
 .export init_music, stop_music, update_music, update_music_ch
 .export music_play_note
-.include "src/musicseq.h"
+.include "pentlyseq.inc"
 
 .ifndef SOUND_NTSC_ONLY
 SOUND_NTSC_ONLY = 0

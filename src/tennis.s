@@ -7,7 +7,7 @@
 ; the copyright notice and this notice are preserved in all source
 ; code copies.  This file is offered as-is, without any warranty.
 ;
-.include "src/tennis.h"
+.include "tennis.inc"
 
 PADDLE_ACCEL = 100
 PADDLE_MAX_SPEED = 8
@@ -257,7 +257,7 @@ launch:
   ldx ball_yhi
   cpx #(TOP_WALL+BOTTOM_WALL)/2
   bcc above_centerline
-  lda #-2
+  lda #<-2
 above_centerline:
   jsr tennis_set_ball_vel
   jmp tennis_hide_tip
@@ -507,11 +507,11 @@ ydist = 1
   bne reject_1
 
   ; decide which paddle to check for collision
-  lda #-PADDLE_1P_X
+  lda #<-PADDLE_1P_X
   ldx #0
   bit ball_dxhi
   bmi is_1p_1
-  lda #-PADDLE_2P_X
+  lda #<-PADDLE_2P_X
   ldx #1
 is_1p_1:
   clc

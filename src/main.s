@@ -8,8 +8,8 @@
 ; code copies.  This file is offered as-is, without any warranty.
 ;
 
-.include "src/nes.h"
-.include "src/ram.h"
+.include "nes.inc"
+.include "global.inc"
 
 .import axe_callback_on
 .export psg_sfx_state
@@ -271,7 +271,7 @@ WALK_BRAKE = 8  ; stopping acceleration in 1/256 px/frame^2
   bne writebackFacing
 rightFacing:
   lda player_facing
-  and #~$40
+  and #<~$40
 writebackFacing:
   sta player_facing
 noChangeFacing:
@@ -513,4 +513,6 @@ nope:
 .endproc
 
 
-
+.segment "CHR"
+.incbin "obj/nes/bggfx.chr"
+.incbin "obj/nes/spritegfx.chr"

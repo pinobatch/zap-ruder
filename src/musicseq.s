@@ -9,7 +9,7 @@
 ;
 ; Translation: Go ahead and make your ReMixes, but credit me.
 
-.include "src/musicseq.h"
+.include "pentlyseq.inc"
 
 .segment "RODATA"
 
@@ -74,8 +74,8 @@ openhat_snd:
 drumSFX:
   .byt  6,  2
   .byt  1,  5
-  .byt  3, -1
-  .byt  7, -1
+  .byt  3,$FF
+  .byt  7,$FF
 KICK  = 0*8
 SNARE = 1*8
 CLHAT = 2*8
