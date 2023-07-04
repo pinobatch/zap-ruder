@@ -10,6 +10,11 @@
 .include "nes.inc"
 .include "global.inc"
 
+
+PADDLE_ENDCAP_TILE = $05
+PADDLE_BODY_TILE = $02
+BALL_BASE_TILE = $C0
+
 ;;
 ; X: x position of ball center
 ; Y: y position of ball center
@@ -71,7 +76,7 @@ clip_not_above_16:
   lda base_tileno
   asl a
   and #%00001110
-  ora #$40
+  ora #BALL_BASE_TILE
   sta base_tileno
   ldy oam_used
   
@@ -137,9 +142,6 @@ widthinstructions_3:
 ; bits 5-0: OR'd with tile number
 ; bit 6: horizontal flip
 ; bit 7: vertical flip
-
-PADDLE_ENDCAP_TILE = $05
-PADDLE_BODY_TILE = $02
 
 .segment "CODE"
 ;;

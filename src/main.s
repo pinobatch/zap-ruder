@@ -20,15 +20,6 @@ oam_used:      .res 1  ; starts at 0
 cur_keys:      .res 2
 new_keys:      .res 2
 
-; Game variables
-player_xlo:       .res 1  ; horizontal position is xhi + xlo/256 px
-player_xhi:       .res 1
-player_dxlo:      .res 1  ; speed in pixels per 256 s
-player_yhi:       .res 1
-player_facing:    .res 1
-player_frame:     .res 1
-player_frame_sub: .res 1
-
 ; Used by music engine
 pently_zp_state: .res 32
 
@@ -181,10 +172,6 @@ vwait2:
 
   ; Set up game variables, as if it were the start of a new level.
   lda #0
-  sta player_xlo
-  sta player_dxlo
-  sta player_facing
-  sta player_frame
   sta axe_callback_on
   sta cur_hue
   sta axe_callback_on
@@ -192,10 +179,6 @@ vwait2:
   sta cur_bright
   lda #4
   sta cur_radius
-  lda #48
-  sta player_xhi
-  lda #199
-  sta player_yhi
   
   jsr title_screen
 
@@ -232,224 +215,8 @@ menu_item_procs:
 .popseg
 .endproc
 
-; constants used by move_player
-; PAL frames are about 20% longer than NTSC frames.  So if you make
-; dual NTSC and PAL versions, or you auto-adapt to the TV system,
-; you'll want PAL velocity values to be 1.2 times the corresponding
-; NTSC values, and PAL accelerations should be 1.44 times NTSC.
-WALK_SPD = 85   ; speed limit in 1/256 px/frame
-WALK_ACCEL = 4  ; movement acceleration in 1/256 px/frame^2
-WALK_BRAKE = 8  ; stopping acceleration in 1/256 px/frame^2
-
-.proc move_player
-
-  lda cur_keys
-  sta abl_keys
-  lda #WALK_SPD
-  sta abl_maxVel
-  ldy #$00
-  sty abl_maxVel+1
-  lda player_dxlo
-  bpl :+
-  dey
-:
-  sta abl_vel
-  sty abl_vel+1
-  lda #WALK_ACCEL
-  sta abl_accelRate
-  lda #WALK_BRAKE
-  sta abl_brakeRate
-  jsr accelBrakeLimit
-
-  ; Write back facing direction based on velocity
-  lda abl_vel
-  sta player_dxlo
-  beq noChangeFacing
-  bpl rightFacing
-  lda player_facing
-  ora #$40
-  bne writebackFacing
-rightFacing:
-  lda player_facing
-  and #<~$40
-writebackFacing:
-  sta player_facing
-noChangeFacing:
-
-  ; In a real game, you'd respond to A, B, Up, Down, etc. here.
-
-  ; Move the player by adding the velocity to the 16-bit X position.
-  lda player_dxlo
-  bpl player_dxlo_pos
-  ; if velocity is negative, subtract 1 from high byte to sign extend
-  dec player_xhi
-player_dxlo_pos:
-  clc
-  adc player_xlo
-  sta player_xlo
-  lda #0          ; add high byte
-  adc player_xhi
-  sta player_xhi
-
-  ; Test for collision with side walls
-  cmp #28
-  bcs notHitLeft
-  lda #28
-  sta player_xhi
-  lda #0
-  sta player_dxlo
-  beq doneWallCollision
-notHitLeft:
-  cmp #212
-  bcc notHitRight
-  lda #211
-  sta player_xhi
-  lda #0
-  sta player_dxlo
-notHitRight:
-doneWallCollision:
-  
-  ; Animate the player
-  ; If stopped, freeze the animation on frame 0 or 1
-  lda player_dxlo
-  bne notStop1
-  lda #$80
-  sta player_frame_sub
-  lda player_frame
-  cmp #2
-  bcc have_player_frame
-  lda #0
-  beq have_player_frame
-notStop1:
-
-  ; Take absolute value of velocity (negate it if it's negative)
-  bpl player_animate_noneg
-  eor #$FF
-  clc
-  adc #1
-player_animate_noneg:
-
-  lsr a  ; Multiply abs(velocity) by 5/16
-  lsr a
-  sta 0
-  lsr a
-  lsr a
-  adc 0
-
-  ; And 16-bit add it to player_frame, mod $600  
-  adc player_frame_sub
-  sta player_frame_sub
-  lda player_frame
-  adc #0
-  cmp #6
-  bcc have_player_frame
-  lda #0
-have_player_frame:
-  sta player_frame
-
-  rts
-.endproc
-
-;;
-; Draws the player's character to the display list as six sprites.
-; In the template, we don't need to handle half-offscreen actors,
-; but a scrolling game will need to "clip" sprites (skip drawing the
-; parts that are offscreen).
-.proc draw_player_sprite
-draw_y = 0
-cur_tile = 1
-x_add = 2         ; +8 when not flipped; -8 when flipped
-draw_x = 3
-rows_left = 4
-row_first_tile = 5
-draw_x_left = 7
-
-  lda #3
-  sta rows_left
-  
-  ; In platform games, the Y position is often understood as the
-  ; bottom of a character because that makes certain things related
-  ; to platform collision easier to reason about.  Here, the
-  ; character is 24 pixels tall, and player_yhi is the bottom.
-  ; On the NES, sprites are drawn one scanline lower than the Y
-  ; coordinate in the OAM entry (e.g. the top row of pixels of a
-  ; sprite with Y=8 is on scanline 9).  But in a platformer, it's
-  ; also common practice to overlap the bottom row of a sprite's
-  ; pixels with the top pixel of the background platform that they
-  ; walk on to suggest depth in the background.
-  lda player_yhi
-  sec
-  sbc #24
-  sta draw_y
-
-  ; set up increment amounts based on flip value
-  ; A: distance to move the pen (8 or -8)
-  ; X: relative X position of first OAM entry
-  lda player_xhi
-  ldx #8
-  bit player_facing
-  bvc not_flipped
-  clc
-  adc #8
-  ldx #(256-8)
-not_flipped:
-  sta draw_x_left
-  stx x_add
-
-  ; the six frames start at $10, $12, ..., $1A  
-  lda player_frame
-  asl a
-  ora #$10
-  sta row_first_tile
-
-  ldx oam_used
-rowloop:
-  ldy #2              ; Y: remaining width on this row in 8px units
-  lda row_first_tile
-  sta cur_tile
-  lda draw_x_left
-  sta draw_x
-tileloop:
-
-  ; draw an 8x8 pixel chunk of the character using one entry in the
-  ; display list
-  lda draw_y
-  sta OAM,x
-  lda cur_tile
-  inc cur_tile
-  sta OAM+1,x
-  lda player_facing
-  sta OAM+2,x
-  lda draw_x
-  sta OAM+3,x
-  clc
-  adc x_add
-  sta draw_x
-  
-  ; move to the next entry of the display list
-  inx
-  inx
-  inx
-  inx
-  dey
-  bne tileloop
-
-  ; move to the next row, which is 8 scanlines down and on the next
-  ; row of tiles in the pattern table
-  lda draw_y
-  clc
-  adc #8
-  sta draw_y
-  lda row_first_tile
-  clc
-  adc #16
-  sta row_first_tile
-  dec rows_left
-  bne rowloop
-
-  stx oam_used
-  rts
-.endproc
+RIGHT_ARROW_SPRITE_TILE = $06
+DOWN_ARROW_SPRITE_TILE = $07
 
 ;;
 ; @param Y vertical position
@@ -468,7 +235,7 @@ xpos = 3
   sec
   sbc #4
   sta OAM,x
-  lda #$06
+  lda #RIGHT_ARROW_SPRITE_TILE
   sta OAM+1,x
   lda xpos
   sta OAM+3,x
@@ -499,7 +266,7 @@ nope:
   dey
   tya
   sta OAM,x
-  lda #$07
+  lda #DOWN_ARROW_SPRITE_TILE
   sta OAM+1,x
   lda xpos
   sec

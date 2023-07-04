@@ -12,7 +12,8 @@
 
 JOIN_DELAY = 300
 LED_TILE_BASE = $A0
-NET_TILE_BASE = $9E
+NET_TILE_BASE = $BA
+PORTRAIT_TILE_BASE = $8C
 
 TIP_WIDTH = 12
 tipBuffer = $0100
@@ -195,7 +196,9 @@ each_portrait:
   sty PPUADDR
   lda portrait_addr,x
   sta PPUADDR
-  lda #$AA
+  txa
+  asl a
+  ora #PORTRAIT_TILE_BASE+$00
   sta PPUDATA
   eor #$01
   sta PPUDATA
@@ -215,7 +218,9 @@ not_ai:
   lda portrait_addr,x
   ora #$20
   sta PPUADDR
-  lda #$BA
+  txa
+  asl a
+  ora #PORTRAIT_TILE_BASE+$10
   sta PPUDATA
   eor #$01
   sta PPUDATA
@@ -272,17 +277,7 @@ netcols:
 
 .proc tennis_draw_sprites
 
-  ; Place sprite 0
-  lda #7
-  sta OAM
-  lda #4
-  sta OAM+1
-  lda #%00000000
-  sta OAM+2
-  lda #20
-  sta OAM+3
-  ldx #4
-  stx oam_used
+  jsr draw_sprite_0
 
   ; Draw both players' paddles
   ldy paddle_yhi+0

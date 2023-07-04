@@ -1,17 +1,17 @@
-#!/usr/bin/env python
-from __future__ import with_statement, division
-from Tkinter import Tk, Frame, Button, Canvas, Label, NW
-from array import array
+#!/usr/bin/env python3
+from tkinter import Tk, Frame, Button, Canvas, Label, NW
 from PIL import Image as PILImage, ImageTk, ImageDraw
+import sys
+import argparse
 
 def tileFromPlanar(s, opaqueBase=0):
     nPlanes = len(s) // 8
     im = PILImage.new('P', (8, 8))
     pixels = im.load()
     if pixels is None:
-        print "Ouch!", repr(im)
+        print("how did pixels become None?", repr(im))
     for y in range(8):
-        planedata = [ord(c) for c in s[y::8]]
+        planedata = s[y::8]
         for x in range(8):
             c = 0
             for i in range(nPlanes):
@@ -54,7 +54,7 @@ def renderChrFile(tiledata, palette, opaqueBase=0):
 
 class NamFile:
     defaultNESPalette = \
-        "\x22\x18\x2A\x0F\x22\x30\x16\x08\x22\x30\x2a\x08\x22\x30\x12\x08"
+        b"\x30\x10\x00\x0F\x30\x26\x16\x06\x30\x2a\x1a\x0a\x30\x22\x12\x02"
     nesclut = [
         (0x80,0x80,0x80), (0x00,0x00,0xBB), (0x37,0x00,0xBF), (0x84,0x00,0xA6),
         (0xBB,0x00,0x6A), (0xB7,0x00,0x1E), (0xB3,0x00,0x00), (0x91,0x26,0x00),
@@ -96,7 +96,7 @@ class NamFile:
                 pal = infp.read(16)
             if len(paldata) != 16:
                 raise ValueError("not enough data for palette")
-        except IOError, e:
+        except IOError as e:
             import errno
             if e.errno in (errno.ENOENT, errno.EINVAL):
                 pal = self.defaultNESPalette
@@ -104,30 +104,30 @@ class NamFile:
                 raise
         self.clut = []
         for c in pal:
-            self.clut.extend(self.nesclut[ord(c) & 0x3F])
+            self.clut.extend(self.nesclut[c & 0x3F])
         
     def loadnam(self, namfilename):
-        print "namfilename is", namfilename
+        print("Loading nametable file", namfilename)
         if namfilename is not None:
             try:
                 with open(namfilename, 'rb') as infp:
                     namdata = infp.read(1152)
                 if ((len(namdata) != 1024
-                     and namdata.startswith('\x04\x00'))
+                     and namdata.startswith(b'\x04\x00'))
                     or namfilename.lower().endswith('.pkb')):
-                    print "unpacking"
-                    namdata = UnPackBits(namdata[2:]).flush().tostring()
+                    print("Unpacking with PackBits")
+                    namdata = UnPackBits(namdata[2:]).flush()
                 if len(namdata) != 1024:
                     raise ValueError("not enough data for nametable")
-                self.namdata = array('B', namdata)
-            except IOError, e:
+                self.namdata = bytearray(namdata)
+            except IOError as e:
                 import errno
                 if e.errno == errno.ENOENT:
                     namfilename = None
                 else:
                     raise
         if namfilename is None:
-            self.namdata = array('B', [0 for i in range(1024)])
+            self.namdata = bytearray(1024)
         self.namfilename = namfilename
         self.setUnsaved(False)
 
@@ -140,9 +140,9 @@ class NamFile:
     def savenam(self, namfilename=None):
         if namfilename is None:
             namfilename = self.namfilename
-        s = self.namdata.tostring()
+        s = self.namdata
         if namfilename.lower().endswith('.pkb'):
-            s = "\x04\x00" + PackBits(s).flush().tostring()
+            s = b"\x04\x00" + PackBits(s).flush()
         with open(namfilename, 'wb') as outfp:
             outfp.write(s)
         self.namfilename = namfilename
@@ -177,7 +177,7 @@ class NamFile:
         return tileFromPlanar(self.getTileData(tileNo), attrNo * 4)
 
 def build_menubar(parent, mbardata):
-    from Tkinter import Menu
+    from tkinter import Menu
     menubar = Menu(parent)
     parent.config(menu=menubar)
     menus = []
@@ -203,12 +203,13 @@ def build_menubar(parent, mbardata):
 
 class TilePicker(Frame):
     def __init__(self, parent, doc, **kw):
-        apply(Frame.__init__, (self, parent), kw)
+        Frame.__init__(self, parent, **kw)
         self.doc = doc
         self.tilePicker = None
         self.attrPicker = None
         self.status = None
         self.curTile = 0
+        self.lastX = self.lastY = 0
         self.setAttribute(0)
         self.tilePicker = Label(self, image=self.tilePickerPI,
                                 width=128, borderwidth=0)
@@ -251,7 +252,9 @@ class TilePicker(Frame):
     def setStatus(self):
         if self.status is None:
             return
-        label = "tile $%02x attr %d" % (self.curTile, self.curAttribute)
+        addr = 0x2000 | (self.lastY << 5) | self.lastX
+        label = ("tile $%02x attr %d\naddr $%04x (%d, %d)"
+                 % (self.curTile, self.curAttribute, addr, self.lastX, self.lastY))
         self.status.configure(text=label)
 
     def tilePickerCallback(self, event):
@@ -259,18 +262,18 @@ class TilePicker(Frame):
             tileX = event.x // 8
             tileY = event.y // 8
             newTileNo = tileY * 16 + tileX
-            #print "mouse was clicked on tile", newTileNo
+            #print("mouse was clicked on tile", newTileNo)
             self.setTile(newTileNo)
             return
-        print "mouse was clicked at (%d, %d)" % (event.x, event.y)
+        print("mouse was clicked at (%d, %d)" % (event.x, event.y))
 
     def attrPickerCallback(self, event):
         if event.x >= 0 and event.x < 128:
             attr = event.x // 32
-            #print "mouse was clicked on attribute", attr
+            #print("mouse was clicked on attribute", attr)
             self.setAttribute(attr)
             return
-        print "mouse was clicked at (%d, %d)" % (event.x, event.y)
+        print("mouse was clicked at (%d, %d)" % (event.x, event.y))
 
 class NamDisplay(Canvas):
     def __init__(self, parent, doc, **kw):
@@ -278,7 +281,7 @@ class NamDisplay(Canvas):
         kw['height'] = 480
         kw['relief']='raised'
         kw['highlightthickness'] = 0
-        apply(Canvas.__init__, (self, parent), kw)
+        Canvas.__init__(self, parent, **kw)
         self.doc = doc
         self.tile = []
         im = PILImage.new('RGB', (32, 32))
@@ -320,7 +323,7 @@ class NamDisplay(Canvas):
 
 class PackBits():
     def __init__(self, toWrite=''):
-        self.bytes = array('b')
+        self.bytes = bytearray()
         self.closed = False
         self.mode = 'wb'
         self.name = '<PackBits>'
@@ -335,7 +338,7 @@ class PackBits():
     def write(self, s):
         """Add a string to the buffer."""
         if not self.closed:
-            self.bytes.fromstring(s)
+            self.bytes.extend(s)
 
     def tell(self):
         return len(self.bytes)
@@ -346,13 +349,13 @@ class PackBits():
 
     def writelines(self, seq):
         """Add a sequence of strings to the buffer."""
-        self.write(''.join(seq))
+        self.write(b''.join(seq))
 
     def flush(self):
         """Compress the data to a file."""
         i = 0
         base = 0
-        out = array('b')
+        out = bytearray()
         while base < len(self.bytes):
 
             # measure the run starting at t
@@ -365,7 +368,7 @@ class PackBits():
             # if the run is either length 3 or to the end of the file,
             # write it
             if i > 2 or base + i == len(self.bytes):
-                out.append(1 - i)
+                out.append(257 - i)
                 out.append(self.bytes[base])
                 base += i
                 continue
@@ -385,34 +388,38 @@ class PackBits():
 
     @staticmethod
     def test():
-        pb = PackBits('stopping stoppping stopppppi')
+        pb = PackBits(b'stopping stoppping stopppppi')
         data = pb.flush()
-        print repr(data)
+        print(repr(data))
 
 class UnPackBits(PackBits):
     def flush(self):
-        out = array('b')
+        out = bytearray()
         base = 0
         while base < len(self.bytes):
             c = self.bytes[base]
-            if c > 0 and c <= 127:
+            if c <= 127:
                 b = self.bytes[base + 1]
                 out.extend(self.bytes[base + 1:base + c + 2])
                 base += 2 + c
-            elif c >= -127:
+            elif c >= 129:
                 b = self.bytes[base + 1]
-                out.fromlist([b] * (1 - c))
+                
+                out.extend(bytes([b]) * (257 - c))
                 base += 2
+            else:
+                print("byte %d" % c, file=sys.stderr)
+                base += 1
         return out
 
     @staticmethod
     def test():
-        start = 'stopping stoppping stopppppi'
-        packed = PackBits(start).flush().tostring()
-        print repr(packed)
-        unpacked = UnPackBits(packed).flush().tostring()
-        print repr(unpacked)
-        print "pass" if start == unpacked else "fail"
+        start = b'stopping stoppping stopppppi'
+        packed = PackBits(start).flush()
+        print(repr(packed))
+        unpacked = bytes(UnPackBits(packed).flush())
+        print(repr(unpacked))
+        print("pass" if start == unpacked else "fail")
         
 
 class App:
@@ -435,7 +442,7 @@ class App:
                 ("Open &Pattern Table...", lambda: self.file_open_chr(), "Ctrl+L"),
                 '-',
                 ("&Save", lambda: self.file_save_nam(), "Ctrl+S"),
-                ("Save &As...", lambda: self.file_save_nam_as(), "Ctrl+A"),
+                ("Save &As...", lambda: self.file_save_nam_as(), "Ctrl+Shift+S"),
                 '-',
                 ("E&xit", lambda: self.file_quit(), "Ctrl+Q")
             ]),
@@ -452,6 +459,8 @@ class App:
         w.bind("<Control-L>", lambda e: self.file_open_chr())
         w.bind("<Control-s>", lambda e: self.file_save_nam())
         w.bind("<Control-S>", lambda e: self.file_save_nam())
+        w.bind("<Control-Shift-s>", lambda e: self.file_save_nam_as())
+        w.bind("<Control-Shift-S>", lambda e: self.file_save_nam_as())
         w.bind("<Control-q>", lambda e: self.file_quit())
         w.bind("<Control-Q>", lambda e: self.file_quit())
 
@@ -471,6 +480,7 @@ class App:
             x = event.x // 16
             y = event.y // 16
             (tile, attribute) = self.doc.getTile(x, y)
+            self.tilePicker.lastX, self.tilePicker.lastY = x, y
             self.tilePicker.curTile = tile
             self.tilePicker.setAttribute(attribute)
             return
@@ -479,6 +489,7 @@ class App:
         if event.x >= 0 and event.x < 512 and event.y >= 0 and event.y < 512:
             x = event.x // 16
             y = event.y // 16
+            self.tilePicker.lastX, self.tilePicker.lastY = x, y
             t = self.tilePicker.curTile
             a = self.tilePicker.curAttribute
             self.doc.setTile(x, y, t, a)
@@ -499,23 +510,22 @@ class App:
         self.window.title(title)
         
     def file_new_nam(self):
-        print "File > New Nametable"
+        print("File > New Nametable")
 
     def file_open_nam(self):
-        from tkFileDialog import askopenfilename
+        from tkinter.filedialog import askopenfilename
         filename = askopenfilename(parent=root,
                                    filetypes=self.filetypes,
                                    initialfile=self.doc.namfilename,
                                    title="Open Nametable")
-        print "file open nam: filename is", filename
-        if not isinstance(filename, basestring):
+        if not isinstance(filename, str):
             return
         self.doc.loadnam(filename)
         self.namDisplay.updScreen()
         self.updWindowTitle()
 
     def file_open_chr(self):
-        from tkFileDialog import askopenfilename
+        from tkinter.filedialog import askopenfilename
         filename = askopenfilename(parent=root,
                                    filetypes=[('Pattern Table', '*.chr')],
                                    initialfile=self.doc.namfilename,
@@ -533,13 +543,13 @@ class App:
         self.updWindowTitle()
 
     def file_save_nam_as(self):
-        from tkFileDialog import asksaveasfilename
+        from tkinter.filedialog import asksaveasfilename
         filename = asksaveasfilename(parent=root,
                                      filetypes=self.filetypes,
                                      title="Save Nametable As")
         ext = filename[-4:].lower()
         if ext in ('.png', '.gif', '.bmp'):
-            print "Would save image to", filename
+            print("Would save image to", filename)
         else:
             self.doc.savenam(filename)
         self.updWindowTitle()
@@ -550,10 +560,10 @@ class App:
 root = Tk()
 app = App(root, NamFile('../obj/nes/bggfx.chr'))
 root.mainloop()
-print "remain:"
-print "1. implement image saving"
-print "2. implement and test loading"
-print "3. implement and test compressed pkb support"
-print "4. Implement stub methods for File menu items"
-print "5. Warn on closing document where doc.unsaved is not False"
-print "6. Write palette editor"
+print("""remain:
+1. implement image saving
+2. implement and test loading
+3. implement and test compressed pkb support
+4. Implement stub methods for File menu items
+5. Warn on closing document where doc.unsaved is not False
+6. Write palette editor""")

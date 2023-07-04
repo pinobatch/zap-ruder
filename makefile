@@ -23,18 +23,15 @@ objlist := zapkernels main ppuclear title menu testpatterns \
 
 objlistnsf := nsfshell pentlysound pentlymusic musicseq ntscPeriods
 
-AS65 = ca65
-LD65 = ld65
+AS65 := ca65
+LD65 := ld65
 CFLAGS65 := -DZAPPER_TO_A_BUTTON=1 -DPENTLY_USE_PAL_ADJUST=0 \
   -DPENTLY_USE_ROW_CALLBACK=1
-objdir = obj/nes
-srcdir = src
-imgdir = tilesets
+objdir := obj/nes
+srcdir := src
+imgdir := tilesets
 
-#EMU := "/C/Program Files/Nintendulator/Nintendulator.exe"
-#EMU := fceux --input1 GamePad.0 --input2 Zapper.0
-#EMU := mednafen -nes.pal 0 -nes.input.port1 gamepad -nes.input.port2 zapper
-EMU := Mesen.exe
+EMU := Mesen
 
 
 # other options for EMU are start (Windows) or gnome-open (GNOME)

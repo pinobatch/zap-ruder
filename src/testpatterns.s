@@ -12,6 +12,11 @@
 
 MEDIAN_SIZE = 7
 
+SPRITE_0_X = 20
+SPRITE_0_Y = 7
+SPRITE_0_TILE = $04
+SPRITE_0_ATTR = $20  ; HIDDEN bit on
+
 .segment "ZEROPAGE"
 cur_hue:    .res 1
 cur_bright: .res 1
@@ -513,24 +518,10 @@ no_tens:
 
 .proc basic_tests_next_frame
 
-  ; Draw a sprite to let the player know it's still working, then
   ; clear unused display list entries.
-;  jsr move_player
-;  jsr draw_player_sprite
   ldx oam_used
   jsr ppu_clear_oam
-
-  ; Place sprite 0 in the bar at the top of each test pattern screen
-  lda #7
-  sta OAM
-  lda #4
-  sta OAM+1
-  lda #%00000000
-  sta OAM+2
-  lda #20
-  sta OAM+3
-  ldx #4
-  stx oam_used
+  jsr draw_sprite_0
 
   ; Compute the printable hue number
   ldx #' '
@@ -738,6 +729,21 @@ notUp:
   rts
 .endproc
 
+.proc draw_sprite_0
+  ; Place sprite 0 in the bar at the top of each test pattern screen
+  lda #SPRITE_0_Y
+  sta OAM+0
+  lda #SPRITE_0_TILE
+  sta OAM+1
+  lda #SPRITE_0_ATTR
+  sta OAM+2
+  lda #SPRITE_0_X
+  sta OAM+3
+  ldx #4
+  stx oam_used
+  rts
+.endproc
+
 ;;
 ; Waits for sprite 0 hit.
 ; @return PPUSTATUS at end.  V is true iff sprite 0 was present.
@@ -872,5 +878,3 @@ no_inc_trigger:
   beq loop
   rts 
 .endproc
-
-

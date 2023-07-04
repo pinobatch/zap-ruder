@@ -146,17 +146,7 @@ has_moved:
   sta 1
   jsr PKB_unpackblk
 
-  ; Place sprite 0 in the bar at the top of each test pattern screen
-  lda #7
-  sta OAM
-  lda #4
-  sta OAM+1
-  lda #%00000000
-  sta OAM+2
-  lda #20
-  sta OAM+3
-  ldx #4
-  stx oam_used
+  jsr draw_sprite_0
 
 loop:
   lda nmis

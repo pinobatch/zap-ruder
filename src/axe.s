@@ -606,14 +606,7 @@ timeline_rowloop:
   jsr ppu_clear_oam
   
   ; 6. Set up sprite 0
-  lda #4
-  sta oam_used
-  lda #7
-  sta OAM+0
-  lda #4
-  sta OAM+1
-  lda #%00000000
-  sta OAM+2
+  jsr draw_sprite_0
   lda #128
   sta OAM+3
   

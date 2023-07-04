@@ -55,7 +55,8 @@ COLOR_GREEN = $2A
 ; testpatterns.s methods
 .global test_fullbright_yonoff, test_hlines_yonoff, test_vlines_yonoff
 .global test_fullbright_yon2p, test_fullbright_xyon, test_ball_yonoff
-.global test_trigger_time, s0wait
+.global test_trigger_time
+.global draw_sprite_0, s0wait
 
 ; bcd.s methods
 .global bcd8bit
