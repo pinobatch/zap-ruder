@@ -31,8 +31,13 @@ STATE_WIN_GAME = 6
 
 whatNeedsDrawn = $014E
 whatToBlit = $014F
-DRAW_SCORE = 1
-DRAW_TIP = 2
+DRAW_SCORE = %00000001
+DRAW_TIP   = %00000010
+
+SFX_BALL_HIT_PADDLE = 4
+SFX_BALL_HIT_SIDE = 3
+SONG_TENNIS_WIN = 2
+SONG_TENNIS_POINT = 1
 
 ; fields
 .globalzp ball_dxhi, ball_dxlo, ball_dyhi, ball_dylo

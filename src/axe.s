@@ -17,6 +17,10 @@
 AXE_SCROLL_SPEED = 16*256/7
 SOFT_ACCENT_THRESHOLD = 10
 
+SONG_AXE = 3
+AXE_INST_BASE = 4
+AXE_INST_TRIECHO = 10
+
 .segment "BSS"
 lastNotes: .res 128
 rowNumber: .res 1
@@ -92,7 +96,7 @@ clear_notes:
   sta lastNotes,x
   dex
   bpl clear_notes
-  lda #3
+  lda #SONG_AXE
   jsr pently_start_music
   lda #$FF
   sta new_dot_dsthi
@@ -269,7 +273,7 @@ done:
   lsr a
   lsr a
   tax
-  ldy #9  ; instrument for triangle echo
+  ldy #AXE_INST_TRIECHO
   lda pentatonic_notes,x
   clc
   adc #12
@@ -305,7 +309,7 @@ no_minus128:
   ; set the instrument (3-5: normal; 6-8: echoed)
   lda noteAccent
   clc
-  adc #3
+  adc #AXE_INST_BASE
   tay
   lda pentatonic_notes,x
   ldx #4  ; square 2
@@ -338,7 +342,7 @@ echo_minusthree:
   lda lastNotes,y
   and #$03
   clc
-  adc #6
+  adc #AXE_INST_BASE+3
   tay
   lda pentatonic_notes,x
   ldx #4

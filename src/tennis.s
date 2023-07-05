@@ -387,7 +387,7 @@ no_flip_x:
 
   ; The ball velocity is final.
   jsr tennis_update_ball_ypred
-  lda #4
+  lda #SFX_BALL_HIT_PADDLE
   jmp pently_start_sound
 .endproc
 
@@ -488,7 +488,7 @@ reflect_yvel:
   sta ball_yhi
 
   jsr tennis_update_ball_ypred
-  lda #3
+  lda #SFX_BALL_HIT_SIDE
   jsr pently_start_sound
 not_bounce_off_wall:
 
@@ -731,7 +731,7 @@ is_win:
   jsr tennis_tip_winner_player_x
   lda #150
   sta state_timer
-  lda #2
+  lda #SONG_TENNIS_WIN
   jsr pently_start_music
   lda #STATE_WIN_GAME
   sta game_state
@@ -744,7 +744,7 @@ not_game_point:
 tip_drawn:
   lda #150
   sta state_timer
-  lda #1
+  lda #SONG_TENNIS_POINT
   jsr pently_start_music
   lda #STATE_WIN_POINT
   sta game_state
