@@ -27,7 +27,7 @@ timed code, the NES CPU can count how long it takes between the start
 of a frame and when the photosensor begins to receive light and
 estimate the barrel's position that way.
 
-But very few NES homebrew games use the Zapper.  I suspect that this
+Very few NES homebrew games use the Zapper.  I suspect that this
 might have three causes:
 
  1. Proliferation of LCD HDTVs, as the Zapper's photosensor works
@@ -36,13 +36,13 @@ might have three causes:
     the Zapper.
  3. Inaccurate emulation of the Zapper in popular emulators.
 
-Cause 1 will only get worse, but I released Russian Roulette
-as a tech demo of reading the trigger only.  Zap Ruder aims
+Cause 1 will only get worse.  I released Russian Roulette in late
+2011 as a tech demo of reading the trigger only.  Zap Ruder aims
 to solve cause 2 and provide test cases for solving cause 3.
 
-This demo is for NTSC NES and NTSC TV.  It should also run on RGB
-modded NES.  It might even work on PAL famiclones such as Dendy for
-what it's worth.  But expect noticeable mistracking on a PAL NES due
+This demo was made with an NTSC NES and NTSC TV.  It should also
+run on RGB modded NES/FC (Sharp C-1 or NESRGB) or PAL famiclones
+(such as Dendy).  Expect noticeable mistracking on a PAL NES due
 to a different CPU clock ratio.  The serial gun of *Vs. Duck Hunt*
 is not yet supported.
 
@@ -129,9 +129,9 @@ holding the trigger halfway.  This is a simple test that counts
 how long the trigger switch on the gun in port 2 is held before it
 is released.  This is the only test that works on an HDTV.
 
-Because the Zapper pulls the trigger down harder than the Control
-Deck can pull it back up, the switch will usually appear active for
-at least 5 frames.
+Because the Zapper pulls the trigger line to ground harder than the
+Control Deck can pull it back up, the switch will usually appear
+active for at least 5 frames.
 
 Toys
 ----

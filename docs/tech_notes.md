@@ -28,7 +28,7 @@ Gun states:
   Within a group 2 item's rectangle.
   When brightness is no longer detected or Y has moved far, go to `POINTAT_NOTHING`.
 - `POINTAT_NONTARGET`  
-  Gun is pointed at brightness, but it's not one of the targets.
+  Gun is pointed at brightness, but not one of the targets.
   When brightness is no longer detected, go to `POINTAT_NOTHING`.
 
 The kernel
@@ -54,8 +54,8 @@ elapse before the photosensor in the gun on controller port 2 turns
 on and how many before it turns back off.
 
 An empty controller port or standard controller will have zero off
-time and a maximum on time.  A Zapper plugged in but not pointed at
-brightness will have maximum on time and zero off time.  When a
+time and a maximum on time.  A Zapper plugged in and not pointed at
+brightness will have maximum off time and zero on time.  When a
 Zapper is pointed at brightness, the on time may range from 4 to 28
 depending on the brightness of the area in front of the barrel.
 
@@ -66,7 +66,7 @@ depending on the brightness of the area in front of the barrel.
 
 This kernel measures how many scanlines before the photosensor in
 the gun on each of the two controller ports turns on.  This kernel
-does not measure on time, but an unplugged gun can be detected with
+does not measure on time.  An unplugged gun can be detected with
 a zero off time that stays zero even during vertical blank.
 
 ### `xyon`
@@ -156,8 +156,8 @@ current speed is less than the peak speed seen during the game, or by
 Computer opponent
 -----------------
 
-The AI in ZapPing depends on the following equation of a line, which
-you may find familiar from high-school geometry:
+The AI in ZapPing models the path of the ball using the
+slope-intercept equation of a line:
 
 > *y* = *mx* + *b*
 
@@ -203,9 +203,9 @@ The paddle moves toward the prediction.  I didn't want the paddle to
 "teleport" atop the prediction but instead move as if a player were
 moving the paddle using a controller.  So I used the upper 8 bits of
 the paddle's velocity to look up approximate braking distances in a
-lookup table.  So every frame, it compares the predicted ball
+lookup table.  Every frame, it compares the predicted ball
 position to the predicted paddle position.  If the predictions differ
-by more than a fourth of a paddle length, the AI moves the paddle
+by more than one quarter of a paddle length, the AI moves the paddle
 toward the ball.
 
 [shift count]: https://en.wikipedia.org/wiki/Fixed-point_arithmetic#Scaling_and_renormalization
