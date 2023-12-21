@@ -67,27 +67,22 @@ loop:
 :
   cmp nmis
   beq :-
-  
-  lda #0
-  sta PPUSCROLL
-  sta PPUSCROLL
-  sta OAMADDR
+
+  ldx #0
+  ldy #0
+  stx OAMADDR
   lda #>OAM
   sta OAM_DMA
   lda #VBLANK_NMI|BG_0000|OBJ_1000
-  sta PPUCTRL
-  lda #BG_ON|OBJ_ON
-  sta PPUMASK
+  sec
+  jsr ppu_screen_on
 
   jsr pently_update
   jsr read_pads
-  
   lda new_keys+0
   ora new_keys+1
   and #KEY_A|KEY_START
   beq loop
-
-  jsr pently_init  ; always call this before stopping pently_update
   rts
 .endproc
 

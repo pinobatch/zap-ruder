@@ -95,3 +95,8 @@ abl_keys = 6  ; bit 0: increase; bit 1: decrease
 .global pently_init, pently_update, pently_start_sound
 ; Pently music methods
 .global pently_start_music, pently_stop_music, pently_play_note
+; sound IDs
+SFX_BALL_HIT_PADDLE = 4
+SFX_BALL_HIT_SIDE = 3
+SONG_TENNIS_WIN = 2
+SONG_TENNIS_POINT = 1

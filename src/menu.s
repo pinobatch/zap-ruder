@@ -121,13 +121,14 @@ has_moved:
 .endproc
 
 .proc pointat_menu
+  jsr pently_init
   ldy #VBLANK_NMI
   sty PPUCTRL
   lda nmis
 :
   cmp nmis
   beq :-
-  
+
   jsr load_main_palette
   lda #$20
   ldx #$00
@@ -145,7 +146,6 @@ has_moved:
   lda #>menu_pkb
   sta 1
   jsr PKB_unpackblk
-
   jsr draw_sprite_0
 
 loop:
@@ -176,38 +176,43 @@ vwait:
   lda #VBLANK_NMI|BG_0000|OBJ_1000
   sec
   jsr ppu_screen_on
+  jsr pently_update
 
   ; handle standard controller
   jsr read_pads
 
   lda new_keys
-  and #KEY_DOWN
-  beq not_down
-  inc pointat_cursor_y
-  lda pointat_cursor_y
-  cmp #5
+  lsr a
+  bcc not_right
+    lda pointat_cursor_x
+    bne dpad_no_move
+    inc pointat_cursor_x
+    bcs dpad_moved_sound
+  not_right:
+  lsr a
+  bcc not_left
+    lda pointat_cursor_x
+    beq dpad_no_move
+    dec pointat_cursor_x
+    bcs dpad_moved_sound
+  not_left:
+  lsr a
   bcc not_down
-  dec pointat_cursor_y
-not_down:
-  lda new_keys
-  and #KEY_UP
-  beq not_up
-  dec pointat_cursor_y
-  bpl not_up
-  inc pointat_cursor_y
-not_up:
-  lda new_keys
-  and #KEY_LEFT
-  beq not_left
-  lda #0
-  sta pointat_cursor_x
-not_left:
-  lda new_keys
-  and #KEY_RIGHT
-  beq not_right
-  lda #1
-  sta pointat_cursor_x
-not_right:
+    lda pointat_cursor_y
+    cmp #5-1
+    bcs dpad_no_move
+    inc pointat_cursor_y
+    bcc dpad_moved_sound
+  not_down:
+  lsr a
+  bcc not_up
+    lda pointat_cursor_y
+    beq dpad_no_move
+    dec pointat_cursor_y
+  dpad_moved_sound:
+    jsr play_hihat
+  not_up:
+  dpad_no_move:
 
   jsr s0wait
   ldy #208
@@ -216,6 +221,7 @@ not_right:
 
   ; If it's pointed at a menu target,
   ; move the cursor to that target.
+  ldx pointat_cursor_x  ; save old column for sound effect on move
   lda pointat_state
   cmp #POINTAT_GRP2
   beq is_pointed_grp2
@@ -241,9 +247,16 @@ get_pointed_y:
   lsr a
   cmp #5
   bcc :+
-  lda #4
-:
-  sta pointat_cursor_y
+    lda #4
+  :
+  cpx pointat_cursor_x
+  bne pointat_moved
+  cmp pointat_cursor_y
+  beq pointat_not_moved
+  pointat_moved:
+    sta pointat_cursor_y
+    jsr play_hihat
+  pointat_not_moved:
   lda #POINTAT_NONTARGET
   sta pointat_state
 not_pointed:
@@ -279,6 +292,9 @@ done:
   asl a
   ora pointat_cursor_x
   rts
+play_hihat:
+  lda #SFX_BALL_HIT_SIDE
+  jmp pently_start_sound
 .endproc
 
 .proc load_main_palette
